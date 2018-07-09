@@ -6,7 +6,7 @@ To Cite: This software is an implementation of the following paper
 Su, Jiahao, Jingling Li, Bobby Bhattacharjee, and Furong Huang. "Tensorized Spectrum Preserving Compression for Neural Networks." arXiv preprint arXiv:1805.10352 (2018).
 
 # Overview
-Our program is based on top of [Tensorflow's official framework for resnet] (https://github.com/tensorflow/models/tree/master/official/resnet), which can be applied to resnet with various sizes. We focused our experiments on the CIFAR10 dataset and the ImageNet (2012) dataset. We break the compression process into 3 steps: **Phase0**, **Phase1**, and **Phase2**.
+Our program is based on top of [Tensorflow's official framework for resnet](https://github.com/tensorflow/models/tree/master/official/resnet), which can be applied to resnet with various sizes. We focused our experiments on the CIFAR10 dataset and the ImageNet (2012) dataset. We break the compression process into 3 steps: **Phase0**, **Phase1**, and **Phase2**.
 
 ## Phase0 (Tensor decomposition): 
 Apply a given (high-order) tensor decomposition to each layer's weight matrix (or weight tensor, e.g. the weight of a convolutional layer) of a pretrained model, and build a corresponding neural network framework use the decomposed components of the original weight matrix for each layer.
@@ -19,13 +19,13 @@ Conduct end-to-end training (normal loss function like cross entropy) on the net
 
 # Set up
 ## Dependencies
-To sucessfully run the scripts, besides usual packages for Tensorflow, you also need to install Tensorly. The installation is quite simple and you can use pip as what is mentioned in the [instructions] (http://tensorly.org/stable/installation.html)
+To sucessfully run the scripts, besides usual packages for Tensorflow, you also need to install Tensorly. The installation is quite simple and you can use pip as what is mentioned in the [instructions](http://tensorly.org/stable/installation.html)
 
 ## Data 
-You can follow the instructions on [this link] (https://github.com/tensorflow/models/tree/master/official/resnet) to download the CIFAR-10 dataset and the ImageNet dataset.
+You can follow the instructions on [this link](https://github.com/tensorflow/models/tree/master/official/resnet) to download the CIFAR-10 dataset and the ImageNet dataset.
 
 ## Pretrained models
-As it is quite fast to train CIFAR-10 end to end, the pretrained model we used for cifar10 is trained using the default settings in the [official resnet framework] (https://github.com/tensorflow/models/tree/master/official/resnet). And the the pretrained model for ImageNet is the "ResNet-50 v2" one in the [official resnet framework] (https://github.com/tensorflow/models/tree/master/official/resnet).
+As it is quite fast to train CIFAR-10 end to end, the pretrained model we used for cifar10 is trained using the default settings in the [official resnet framework] (https://github.com/tensorflow/models/tree/master/official/resnet). And the the pretrained model for ImageNet is the "ResNet-50 v2" one in the [official resnet framework](https://github.com/tensorflow/models/tree/master/official/resnet).
 
 # How to run
 We implemented our own convolutional layer and fully connected layer, which can support compression using 7 different tensor decomposition techniques with specified compression rates. You can find the implementation under the tensornet/ folder.
@@ -47,7 +47,9 @@ The order of the parameters corresponding to the following macros in the scripts
 
 For example, 
 - **bash cifar10_script.sh 'cp' 0.1 '/TTP-NeuralNets-Compression' '/Data/cifar10_data' '/models/cifar10_model' '/tensorized_models/cifar10' 128 100**
+
 means conduct the three phase compression process using CP-decomposition with 10% compression rate on resnet model used for CIFAR-10, where the work directory is '/TTP-NeuralNets-Compression', the CIFAR-10 dataset is stored under '/Data/cifar10_data', the pretrained resnet model is stored under '/models/cifar10_model', and the expected ouput directory is '/tensorized_models/cifar10'. Here, the batch_size is 128 and number of training epoches is 100.
 
 - **bash imagenet_script.sh 'tk' 0.05 '/TTP-NeuralNets-Compression' '/Data/ImageNet2012' '/models/imagenet_resnet50' '/tensorized_models/imagenet' 256 50**
+
 means conduct the three phase compression process using Tucker-decomposition with 5% compression rate on resnet model used for ImageNet, where the work directory is '/TTP-NeuralNets-Compression', the ImageNet dataset is stored under '/Data/ImageNet2012', the pretrained resnet model is stored under '/models/imagenet_resnet50', and the expected ouput directory is '/tensorized_models/imagenet'. Here, the batch_size is 256 and number of training epoches is 50.
