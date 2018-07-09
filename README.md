@@ -1,53 +1,53 @@
-# ResNet in TensorFlow
+# Tensorized Spectrum Preserving Compression of Neural Networks
+We implement an efficient mechanism for compressing large networks by **tensorizing** network layers: i.e. mapping layers on to high-order matrices, for which we introduce new tensor decomposition methods. 
 
-Deep residual networks, or ResNets for short, provided the breakthrough idea of identity mappings in order to enable training of very deep convolutional neural networks. This folder contains an implementation of ResNet for the ImageNet dataset written in TensorFlow.
+To Cite: This software is an implementation of the following paper 
 
-See the following papers for more background:
+Su, Jiahao, Jingling Li, Bobby Bhattacharjee, and Furong Huang. "Tensorized Spectrum Preserving Compression for Neural Networks." arXiv preprint arXiv:1805.10352 (2018).
 
-[1] [Deep Residual Learning for Image Recognition](https://arxiv.org/pdf/1512.03385.pdf) by Kaiming He, Xiangyu Zhang, Shaoqing Ren, and Jian Sun, Dec 2015.
+# Overview
+Our program is based on top of [Tensorflow's official framework for resnet] (https://github.com/tensorflow/models/tree/master/official/resnet), which can be applied to resnet with various sizes. We focused our experiments on the CIFAR10 dataset and the ImageNet (2012) dataset. We break the compression process into 3 steps: **Phase0**, **Phase1**, and **Phase2**.
 
-[2] [Identity Mappings in Deep Residual Networks](https://arxiv.org/pdf/1603.05027.pdf) by Kaiming He, Xiangyu Zhang, Shaoqing Ren, and Jian Sun, Jul 2016.
+## Phase0 (Tensor decomposition): 
+Apply a given (high-order) tensor decomposition to each layer's weight matrix (or weight tensor, e.g. the weight of a convolutional layer) of a pretrained model, and build a corresponding neural network framework use the decomposed components of the original weight matrix for each layer.
 
-In code v1 refers to the resnet defined in [1], while v2 correspondingly refers to [2]. The principle difference between the two versions is that v1 applies batch normalization and activation after convolution, while v2 applies batch normalization, then activation, and finally convolution. A schematic comparison is presented in Figure 1 (left) of [2].
+## Phase1 (Sequential training):
+We conduct fine tuning on the network model obtained from phase0 by dividing the network into several blocks, and start training on the 1st, 2nd, ... blocks sequentially. We will finish the training for the 1st to the the kth block before we start fine tuning on the (k+1)th block. This sequential training step uses the pretrained model as the reference network in fine tuning (aka. the loss function is the difference between the output of our model and that of the pretrained model).
 
-Please proceed according to which dataset you would like to train/evaluate on:
+## Phase1 (End-to-end fine tuning):
+Conduct end-to-end training (normal loss function like cross entropy) on the network model obtained from phase1.
 
+# Set up
+## Dependencies
+To sucessfully run the scripts, besides usual packages for Tensorflow, you also need to install Tensorly. The installation is quite simple and you can use pip as what is mentioned in the [instructions] (http://tensorly.org/stable/installation.html)
 
-## CIFAR-10
+## Data 
+You can follow the instructions on [this link] (https://github.com/tensorflow/models/tree/master/official/resnet) to download the CIFAR-10 dataset and the ImageNet dataset.
 
-### Setup
+## Pretrained models
+As it is quite fast to train CIFAR-10 end to end, the pretrained model we used for cifar10 is trained using the default settings in the [official resnet framework] (https://github.com/tensorflow/models/tree/master/official/resnet). And the the pretrained model for ImageNet is the "ResNet-50 v2" one in the [official resnet framework] (https://github.com/tensorflow/models/tree/master/official/resnet).
 
-You simply need to have the latest version of TensorFlow installed.
+# How to run
+We implemented our own convolutional layer and fully connected layer, which can support compression using 7 different tensor decomposition techniques with specified compression rates. You can find the implementation under the tensornet/ folder.
 
-First download and extract the CIFAR-10 data from Alex's website, specifying the location with the `--data_dir` flag. Run the following:
+We also prepared automated scripts (under the scripts/ folder) as a demonstration of how we applied the customized conduct convolutional layer and fully connected layer on ResNet used for the CIFAR-10 dataset and the ImageNet dataset. Feel free to add additional flags in the scripts to have richer features in training (e.g. --multi_gpu)
 
-```
-python cifar10_download_and_extract.py
-```
+The order of the parameters corresponding to the following macros in the scripts:
 
-Then to train the model, run the following:
+| Order  | Macro Name | Meaning  |
+| ---- |:----------:| ------------:|
+| 1      | METHOD | the tensor decomposition method used for neural network compression |
+| 2      | RATE      |  the compression rate |
+| 3      | WORK_DIR  | the directory where this github repository lies |
+| 4      | DATA_DIR | the directory where the training data lies |
+| 5      | PRETRAINED_MODEL      |  the directory where the pretrained model lies |
+| 6      | OUTPUT_DIR  | the directory where the output should lie |
+| 7      | BATCH_SIZE      |  the batch size used for fine-tuning (phase 1 and phase 2) |
+| 8      | EPOCHS  | the number of train epoches used for fine-tuning (phase 1 and phase 2)|
 
-```
-python cifar10_main.py
-```
+For example, 
+- **bash cifar10_script.sh 'cp' 0.1 '/TTP-NeuralNets-Compression' '/Data/cifar10_data' '/models/cifar10_model' '/tensorized_models/cifar10' 128 100**
+means conduct the three phase compression process using CP-decomposition with 10% compression rate on resnet model used for CIFAR-10, where the work directory is '/TTP-NeuralNets-Compression', the CIFAR-10 dataset is stored under '/Data/cifar10_data', the pretrained resnet model is stored under '/models/cifar10_model', and the expected ouput directory is '/tensorized_models/cifar10'. Here, the batch_size is 128 and number of training epoches is 100.
 
-Use `--data_dir` to specify the location of the CIFAR-10 data used in the previous step. There are more flag options as described in `cifar10_main.py`.
-
-
-## ImageNet
-
-### Setup
-To begin, you will need to download the ImageNet dataset and convert it to TFRecord format. Follow along with the [Inception guide](https://github.com/tensorflow/models/tree/master/research/inception#getting-started) in order to prepare the dataset.
-
-Once your dataset is ready, you can begin training the model as follows:
-
-```
-python imagenet_main.py --data_dir=/path/to/imagenet
-```
-
-The model will begin training and will automatically evaluate itself on the validation data roughly once per epoch.
-
-Note that there are a number of other options you can specify, including `--model_dir` to choose where to store the model and `--resnet_size` to choose the model size (options include ResNet-18 through ResNet-200). See [`resnet.py`](resnet.py) for the full list of options.
-
-### Pre-trained model
-You can download a 190 MB pre-trained version of ResNet-50 achieving 75.3% top-1 single-crop accuracy here: [resnet50_2017_11_30.tar.gz](http://download.tensorflow.org/models/official/resnet50_2017_11_30.tar.gz). Simply download and uncompress the file, and point the model to the extracted directory using the `--model_dir` flag.
+- **bash imagenet_script.sh 'tk' 0.05 '/TTP-NeuralNets-Compression' '/Data/ImageNet2012' '/models/imagenet_resnet50' '/tensorized_models/imagenet' 256 50**
+means conduct the three phase compression process using Tucker-decomposition with 5% compression rate on resnet model used for ImageNet, where the work directory is '/TTP-NeuralNets-Compression', the ImageNet dataset is stored under '/Data/ImageNet2012', the pretrained resnet model is stored under '/models/imagenet_resnet50', and the expected ouput directory is '/tensorized_models/imagenet'. Here, the batch_size is 256 and number of training epoches is 50.
