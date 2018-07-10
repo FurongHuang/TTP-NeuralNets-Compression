@@ -14,7 +14,7 @@ Apply a given (high-order) tensor decomposition to each layer's weight matrix (o
 ## Phase1 (Sequential training):
 We conduct fine tuning on the network model obtained from phase0 by dividing the network into several blocks, and start training on the 1st, 2nd, ... blocks sequentially. We will finish the training for the 1st to the the kth block before we start fine tuning on the (k+1)th block. This sequential training step uses the pretrained model as the reference network in fine tuning (aka. the loss function is the difference between the output of our model and that of the pretrained model).
 
-## Phase1 (End-to-end fine tuning):
+## Phase2 (End-to-end fine tuning):
 Conduct end-to-end training (normal loss function like cross entropy) on the network model obtained from phase1.
 
 # Set up
@@ -35,7 +35,7 @@ We also prepared automated scripts (under the scripts/ folder) as a demonstratio
 The order of the parameters corresponding to the following macros in the scripts:
 
 | Order  | Macro Name | Meaning  |
-| ---- |:----------:| ------------:|
+| ---- |:----------:|:------------:|
 | 1      | METHOD | the tensor decomposition method used for neural network compression |
 | 2      | RATE      |  the compression rate |
 | 3      | WORK_DIR  | the directory where this github repository lies |
